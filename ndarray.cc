@@ -10,25 +10,25 @@ constexpr int prod(int arg, Args... args) {
 }
 
 
-int __partial_prod(int * buf) {
+int __suffix_prod(int * buf) {
   buf[0] = 1;
   return 1;
 }
 
 template <typename... Args>
-int __partial_prod(int * buf, int arg, Args... args) {
-  buf[0] = arg * __partial_prod(buf + 1, args...);
+int __suffix_prod(int * buf, int arg, Args... args) {
+  buf[0] = arg * __suffix_prod(buf + 1, args...);
   return buf[0];
 }
 
-int * partial_prod() {
+int * suffix_prod() {
   return new int[1]{1};
 }
 
 template <typename... Args>
-int * partial_prod(Args... args) {
+int * suffix_prod(Args... args) {
   int * buf = new int[sizeof...(args) + 1];
-  __partial_prod(buf, args...);
+  __suffix_prod(buf, args...);
   return buf;
 }
 
@@ -146,6 +146,30 @@ template <int... ints>
 using variadic_ints = variadic_values<int>::type<ints...>;
 
 template <typename...>
+struct variadic_reverse;
+
+template <
+  template <int...> typename T,
+  int... rs>
+struct variadic_reverse<T<>, T<rs...>> {
+  using type = T<rs...>;
+};
+
+template <
+  template <int...> typename T,
+  int t,
+  int... ts,
+  int... rs>
+struct variadic_reverse<T<t, ts...>, T<rs...>> : variadic_reverse<T<ts...>, T<t, rs...>> {
+};
+
+template <
+  template <int...> typename T,
+  int... ts>
+struct variadic_reverse<T<ts...>> : variadic_reverse<T<ts...>, T<>>  {
+};
+
+template <typename...>
 struct variadic_uncurrying;
 
 template <
@@ -158,39 +182,12 @@ struct variadic_uncurrying<T<ints...>, R<Type>> {
 };
 
 template <typename...>
-struct variadic_reverse;
-
-template <
-  template <int...> typename T,
-  template <int...> typename R,
-  int... rs>
-struct variadic_reverse<T<>, R<rs...>> {
-  using type = R<rs...>;
-};
-
-template <
-  template <int...> typename T,
-  template <int...> typename R,
-  int t,
-  int... ts,
-  int... rs>
-struct variadic_reverse<T<t, ts...>, R<rs...>> : variadic_reverse<T<ts...>, R<t, rs...>> {
-};
+struct suffix_product;
 
 template <
   template <int...> typename T,
   int... ts>
-struct variadic_reverse<T<ts...>> : variadic_reverse<T<ts...>, T<>>  {
-};
-
-
-template <typename...>
-struct partial_product;
-
-template <
-  template <int...> typename T,
-  int... ts>
-struct partial_product<T<ts...>> : partial_product<T<>, typename variadic_reverse<T<ts...>>::type, T<1>> {
+struct suffix_product<T<ts...>> : suffix_product<T<>, typename variadic_reverse<T<ts...>>::type, T<1>> {
 };
 
 template <
@@ -199,18 +196,18 @@ template <
   int... ts,
   int r,
   int... rs>
-struct partial_product<T<>, T<t, ts...>, T<r, rs...>> : partial_product<T<>, T<ts...>, T<t * r, r, rs...>> {
+struct suffix_product<T<>, T<t, ts...>, T<r, rs...>> : suffix_product<T<>, T<ts...>, T<t * r, r, rs...>> {
 };
 
 template <
   template <int...> typename T,
   int... rs>
-struct partial_product<T<>, T<>, T<rs...>> {
+struct suffix_product<T<>, T<>, T<rs...>> {
   using type = T<rs...>;
 };
 
 template <int... Shape>
-using shapes_to_sizes = typename partial_product<variadic_ints<Shape...>>::type;
+using shapes_to_sizes = typename suffix_product<variadic_ints<Shape...>>::type;
 
 template <typename T, int... Shape>
 using subscriptor_helper = typename variadic_uncurrying<shapes_to_sizes<Shape...>, subscriptor<T>>::type;
@@ -270,7 +267,7 @@ class ndarray<T> : public subscriptor<T> {
 public:
   template <typename... Args>
   ndarray(Args... args) : 
-      subscriptor<T>(sizeof...(args), partial_prod(args...), new T[prod(args...)]),
+      subscriptor<T>(sizeof...(args), suffix_prod(args...), new T[prod(args...)]),
       _shape(new int[sizeof...(args)] {args...}) {
     std::cout << "ndarray tot_size " << prod(args...) << ", base " << this->_mem << '\n';
   }
