@@ -72,9 +72,37 @@ public:
   }
 };
 
+template <typename T, int... Sizes>
+class subscriptor;
+
+template <typename T, int Size, int ElSize, int... Sizes>
+class subscriptor<T, Size, ElSize, Sizes...> {
+  T * _mem;
+
+public:
+  constexpr subscriptor(T * mem) : _mem(mem) {
+  }
+
+  constexpr auto operator[] (int i) {
+    return subscriptor<T, ElSize, Sizes...>(_mem + i * ElSize);
+  }
+};
+
+template <typename T, int Size>
+class subscriptor<T, Size, 1> {
+  T * _mem;
+
+public:
+  constexpr subscriptor(T * mem) : _mem(mem) {
+  }
+
+  constexpr T & operator[] (int i) {
+    return _mem[i];
+  }
+};
 
 template <typename T>
-class subscriptor {
+class subscriptor<T> {
 protected:
   int _dim;
   int * _sizes;
@@ -140,31 +168,42 @@ public:
 using namespace std;
 
 int main() {
-  ndarray<int> A(2, 3, 4);
+  // ndarray<int> A(2, 3, 4);
 
-  cout << "dim = " << A.dim() << '\n';
-  cout << "shape = " << A.shape() << '\n';
-  cout << "sizes = " << A.sizes() << '\n';
+  // cout << "dim = " << A.dim() << '\n';
+  // cout << "shape = " << A.shape() << '\n';
+  // cout << "sizes = " << A.sizes() << '\n';
 
-  cout << '\n';
+  // cout << '\n';
   
-  cout << "&A(0, 0, 0): " << &A(0, 0, 0) <<'\n';
-  cout << "&A(0, 0, 1): " << &A(0, 0, 1) <<'\n';
-  cout << "&A(0, 1, 0): " << &A(0, 1, 0) <<'\n';
-  cout << "&A(1, 0, 0): " << &A(1, 0, 0) <<'\n';
+  // cout << "&A(0, 0, 0): " << &A(0, 0, 0) <<'\n';
+  // cout << "&A(0, 0, 1): " << &A(0, 0, 1) <<'\n';
+  // cout << "&A(0, 1, 0): " << &A(0, 1, 0) <<'\n';
+  // cout << "&A(1, 0, 0): " << &A(1, 0, 0) <<'\n';
 
+  // cout << '\n';
+
+  // A(0, 0, 0) = 123;
+
+  // cout << "A[0][0][0]: " << A[0][0][0] <<'\n';
+  // cout << "A[0][0][1]: " << A[0][0][1] <<'\n';
+  // cout << "A[0][1][0]: " << A[0][1][0] <<'\n';
+  // cout << "A[1][0][0]: " << A[1][0][0] <<'\n';
+
+  // cout << '\n';
+
+  // A[0][1][0] = A[0][0][0] * 3;
+
+  // cout << "A(0, 1, 0): " << A(0, 1, 0) <<'\n';
+
+  int mem[24];
+  subscriptor<int, 24, 12, 4, 1> B(mem);
+
+  cout << "base = " << mem << '\n';
   cout << '\n';
 
-  A(0, 0, 0) = 123;
-
-  cout << "A[0][0][0]: " << A[0][0][0] <<'\n';
-  cout << "A[0][0][1]: " << A[0][0][1] <<'\n';
-  cout << "A[0][1][0]: " << A[0][1][0] <<'\n';
-  cout << "A[1][0][0]: " << A[1][0][0] <<'\n';
-
-  cout << '\n';
-
-  A[0][1][0] = A[0][0][0] * 3;
-
-  cout << "A(0, 1, 0): " << A(0, 1, 0) <<'\n';
+  cout << "&B[0][0][0]: " << &B[0][0][0] <<'\n';
+  cout << "&B[0][0][1]: " << &B[0][0][1] <<'\n';
+  cout << "&B[0][1][0]: " << &B[0][1][0] <<'\n';
+  cout << "&B[1][0][0]: " << &B[1][0][0] <<'\n';
 }
