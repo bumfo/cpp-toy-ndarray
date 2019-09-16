@@ -114,46 +114,50 @@ template <typename...>
 struct shape_to_sizes {
 };
 
+template <typename...>
+struct subscriptor_builder;
+
 template <
-  typename Type, 
-  template <typename, int...> typename T, 
+  template <int...> typename T,
+  template <typename, int...> typename R,
+  typename Type,
+  int... ints>
+struct subscriptor_builder<T<ints...>, R<Type>> {
+  using type = R<Type, ints...>;
+};
+
+template <
   template <int...> typename G, 
   int... Sizes>
-struct shape_to_sizes<G<>, G<>, T<Type, Sizes...>> {
-  using type = T<Type, Sizes...>;
+struct shape_to_sizes<G<>, G<>, G<Sizes...>> {
+  using type = G<Sizes...>;
 };
 
 template <
-  typename Type, 
-  template <typename, int...> typename T, 
   template <int...> typename G, 
-  int... RShape>
-struct shape_to_sizes<G<>, G<RShape...>, T<Type>> : shape_to_sizes<G<>, G<RShape...>, T<Type, 1>> {
+  int... Shape>
+struct shape_to_sizes<G<Shape...>> : shape_to_sizes<G<Shape...>, G<>, G<1>> {
 };
 
 template <
-  typename Type, 
-  template <typename, int...> typename T, 
   template <int...> typename G, 
   int Shape0,
   int... Shape, 
   int... RShape>
-struct shape_to_sizes<G<Shape0, Shape...>, G<RShape...>, T<Type>> : shape_to_sizes<G<Shape...>, G<Shape0, RShape...>, T<Type>> {
+struct shape_to_sizes<G<Shape0, Shape...>, G<RShape...>, G<1>> : shape_to_sizes<G<Shape...>, G<Shape0, RShape...>, G<1>> {
 };
 
 template <
-  typename Type, 
-  template <typename, int...> typename T, 
   template <int...> typename G, 
   int RShape0,
   int... RShape, 
   int Size,
   int... Sizes>
-struct shape_to_sizes<G<>, G<RShape0, RShape...>, T<Type, Size, Sizes...>> : shape_to_sizes<G<>, G<RShape...>, T<Type, RShape0 * Size, Size, Sizes...>> {
+struct shape_to_sizes<G<>, G<RShape0, RShape...>, G<Size, Sizes...>> : shape_to_sizes<G<>, G<RShape...>, G<RShape0 * Size, Size, Sizes...>> {
 };
 
 template <typename T, int... Shape>
-using subscriptor_helper = typename shape_to_sizes<variadic_ints<Shape...>, variadic_ints<>, subscriptor<T>>::type;
+using subscriptor_helper = typename subscriptor_builder<typename shape_to_sizes<variadic_ints<Shape...>>::type, subscriptor<T>>::type;
 
 template <typename T, int... Shape>
 class ndarray : public subscriptor_helper<T, Shape...> {
