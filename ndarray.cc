@@ -76,9 +76,19 @@ public:
   }
 };
 
+template <typename...>
+struct subscriptor_helper_t;
+
+template <
+  typename T,
+  template <int...> typename R,
+  int... ints>
+struct subscriptor_helper_t<T, R<ints...>> {
+  using type = subscriptor<T, ints...>;
+};
 
 template <typename T, int... Shape>
-using subscriptor_helper = typename variadic_prepend<int, subscriptor, T, suffix_product<Shape...>>::type;
+using subscriptor_helper = typename subscriptor_helper_t<T, suffix_product<Shape...>>::type;
 
 template <typename T, int... Shape>
 class ndarray : public subscriptor_helper<T, Shape...> {

@@ -101,19 +101,6 @@ struct variadic_reverse<T<ts...>> : variadic_reverse<T<ts...>, T<>>  {
 };
 
 
-template <typename Value, template <typename, Value...> typename R, typename...>
-struct variadic_prepend;
-
-template <
-  typename Value,
-  template <typename, Value...> typename R,
-  template <Value...> typename T,
-  typename Type,
-  Value... values>
-struct variadic_prepend<Value, R, Type, T<values...>> {
-  using type = R<Type, values...>;
-};
-
 template <typename...>
 struct suffix_product_t;
 
