@@ -77,11 +77,8 @@ public:
 };
 
 
-template <int... Shape>
-using shapes_to_sizes = typename suffix_product<variadic_ints<Shape...>>::type;
-
 template <typename T, int... Shape>
-using subscriptor_helper = typename variadic_uncurrying<shapes_to_sizes<Shape...>, subscriptor<T>>::type;
+using subscriptor_helper = typename variadic_prepend<int, subscriptor, T, suffix_product<Shape...>>::type;
 
 template <typename T, int... Shape>
 class ndarray : public subscriptor_helper<T, Shape...> {

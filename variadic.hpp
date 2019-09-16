@@ -101,26 +101,26 @@ struct variadic_reverse<T<ts...>> : variadic_reverse<T<ts...>, T<>>  {
 };
 
 
-template <typename...>
-struct variadic_uncurrying;
+template <typename Value, template <typename, Value...> typename R, typename...>
+struct variadic_prepend;
 
 template <
-  template <int...> typename T,
-  template <typename, int...> typename R,
+  typename Value,
+  template <typename, Value...> typename R,
+  template <Value...> typename T,
   typename Type,
-  int... ints>
-struct variadic_uncurrying<T<ints...>, R<Type>> {
-  using type = R<Type, ints...>;
+  Value... values>
+struct variadic_prepend<Value, R, Type, T<values...>> {
+  using type = R<Type, values...>;
 };
 
-
 template <typename...>
-struct suffix_product;
+struct suffix_product_t;
 
 template <
   template <int...> typename T,
   int... ts>
-struct suffix_product<T<ts...>> : suffix_product<T<>, typename variadic_reverse<T<ts...>>::type, T<1>> {
+struct suffix_product_t<T<ts...>> : suffix_product_t<T<>, typename variadic_reverse<T<ts...>>::type, T<1>> {
 };
 
 template <
@@ -129,15 +129,17 @@ template <
   int... ts,
   int r,
   int... rs>
-struct suffix_product<T<>, T<t, ts...>, T<r, rs...>> : suffix_product<T<>, T<ts...>, T<t * r, r, rs...>> {
+struct suffix_product_t<T<>, T<t, ts...>, T<r, rs...>> : suffix_product_t<T<>, T<ts...>, T<t * r, r, rs...>> {
 };
 
 template <
   template <int...> typename T,
   int... rs>
-struct suffix_product<T<>, T<>, T<rs...>> {
+struct suffix_product_t<T<>, T<>, T<rs...>> {
   using type = T<rs...>;
 };
 
+template <int... ts>
+using suffix_product = typename suffix_product_t<variadic_ints<ts...>>::type;
 
 #endif // VARIADIC_HPP
