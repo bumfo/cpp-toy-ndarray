@@ -77,27 +77,33 @@ class subscriptor;
 
 template <typename T, int Size, int ElSize, int... Sizes>
 class subscriptor<T, Size, ElSize, Sizes...> {
-  T * _mem;
+  T * _base;
+  int _offset;
 
 public:
-  constexpr subscriptor(T * mem) : _mem(mem) {
+  constexpr subscriptor(T * base, int offset) : _base(base), _offset(offset) {
   }
 
   constexpr auto operator[] (int i) {
-    return subscriptor<T, ElSize, Sizes...>(_mem + i * ElSize);
+    return subscriptor<T, ElSize, Sizes...>(_base, _offset + i * ElSize);
   }
 };
 
 template <typename T, int Size>
 class subscriptor<T, Size, 1> {
-  T * _mem;
+  T * _base;
+  int _offset;
 
 public:
-  constexpr subscriptor(T * mem) : _mem(mem) {
+  constexpr subscriptor(T * base, int offset) : _base(base), _offset(offset) {
   }
 
   constexpr T & operator[] (int i) {
-    return _mem[i];
+    return _base[_offset + i];
+  }
+
+  constexpr int offset(int i) const {
+    return _offset + i;
   }
 };
 
@@ -165,6 +171,14 @@ public:
   }
 };
 
+template <typename T, T value>
+class constexpr_test {
+  friend std::ostream & operator << (std::ostream & os, constexpr_test const & s) {
+    os << value;
+    return os;
+  }
+};
+
 using namespace std;
 
 int main() {
@@ -197,7 +211,7 @@ int main() {
   // cout << "A(0, 1, 0): " << A(0, 1, 0) <<'\n';
 
   int mem[24];
-  subscriptor<int, 24, 12, 4, 1> B(mem);
+  subscriptor<int, 24, 12, 4, 1> B(mem, 0);
 
   cout << "base = " << mem << '\n';
   cout << '\n';
@@ -206,4 +220,8 @@ int main() {
   cout << "&B[0][0][1]: " << &B[0][0][1] <<'\n';
   cout << "&B[0][1][0]: " << &B[0][1][0] <<'\n';
   cout << "&B[1][0][0]: " << &B[1][0][0] <<'\n';
+
+  cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][0].offset(1)>() << '\n';
+  cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][1].offset(0)>() << '\n';
+  cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[1][0].offset(0)>() << '\n';
 }
