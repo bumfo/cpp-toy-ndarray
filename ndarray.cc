@@ -107,23 +107,30 @@ public:
   }
 };
 
-template <int... ints>
-struct variadic_ints {};
-
-template <typename...>
-struct shape_to_sizes {
+template <typename T>
+struct variadic_values {
+  template <T... ts>
+  struct type {
+  };
 };
 
+template <int... ints>
+using variadic_ints = variadic_values<int>::type<ints...>;
+
 template <typename...>
-struct subscriptor_builder;
+struct variadic_uncurrying;
 
 template <
   template <int...> typename T,
   template <typename, int...> typename R,
   typename Type,
   int... ints>
-struct subscriptor_builder<T<ints...>, R<Type>> {
+struct variadic_uncurrying<T<ints...>, R<Type>> {
   using type = R<Type, ints...>;
+};
+
+template <typename...>
+struct shape_to_sizes {
 };
 
 template <
@@ -156,8 +163,11 @@ template <
 struct shape_to_sizes<G<>, G<RShape0, RShape...>, G<Size, Sizes...>> : shape_to_sizes<G<>, G<RShape...>, G<RShape0 * Size, Size, Sizes...>> {
 };
 
+template <int... Shape>
+using sizes_helper = typename shape_to_sizes<variadic_ints<Shape...>>::type;
+
 template <typename T, int... Shape>
-using subscriptor_helper = typename subscriptor_builder<typename shape_to_sizes<variadic_ints<Shape...>>::type, subscriptor<T>>::type;
+using subscriptor_helper = typename variadic_uncurrying<sizes_helper<Shape...>, subscriptor<T>>::type;
 
 template <typename T, int... Shape>
 class ndarray : public subscriptor_helper<T, Shape...> {
