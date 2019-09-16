@@ -130,44 +130,62 @@ struct variadic_uncurrying<T<ints...>, R<Type>> {
 };
 
 template <typename...>
-struct shape_to_sizes {
+struct variadic_reverse;
+
+template <
+  template <int...> typename T,
+  template <int...> typename R,
+  int... rs>
+struct variadic_reverse<T<>, R<rs...>> {
+  using type = R<rs...>;
 };
 
 template <
-  template <int...> typename G, 
-  int... Sizes>
-struct shape_to_sizes<G<>, G<>, G<Sizes...>> {
-  using type = G<Sizes...>;
+  template <int...> typename T,
+  template <int...> typename R,
+  int t,
+  int... ts,
+  int... rs>
+struct variadic_reverse<T<t, ts...>, R<rs...>> : variadic_reverse<T<ts...>, R<t, rs...>> {
 };
 
 template <
-  template <int...> typename G, 
-  int... Shape>
-struct shape_to_sizes<G<Shape...>> : shape_to_sizes<G<Shape...>, G<>, G<1>> {
+  template <int...> typename T,
+  int... ts>
+struct variadic_reverse<T<ts...>> : variadic_reverse<T<ts...>, T<>>  {
+};
+
+
+template <typename...>
+struct partial_product;
+
+template <
+  template <int...> typename T,
+  int... ts>
+struct partial_product<T<ts...>> : partial_product<T<>, typename variadic_reverse<T<ts...>>::type, T<1>> {
 };
 
 template <
-  template <int...> typename G, 
-  int Shape0,
-  int... Shape, 
-  int... RShape>
-struct shape_to_sizes<G<Shape0, Shape...>, G<RShape...>, G<1>> : shape_to_sizes<G<Shape...>, G<Shape0, RShape...>, G<1>> {
+  template <int...> typename T,
+  int t,
+  int... ts,
+  int r,
+  int... rs>
+struct partial_product<T<>, T<t, ts...>, T<r, rs...>> : partial_product<T<>, T<ts...>, T<t * r, r, rs...>> {
 };
 
 template <
-  template <int...> typename G, 
-  int RShape0,
-  int... RShape, 
-  int Size,
-  int... Sizes>
-struct shape_to_sizes<G<>, G<RShape0, RShape...>, G<Size, Sizes...>> : shape_to_sizes<G<>, G<RShape...>, G<RShape0 * Size, Size, Sizes...>> {
+  template <int...> typename T,
+  int... rs>
+struct partial_product<T<>, T<>, T<rs...>> {
+  using type = T<rs...>;
 };
 
 template <int... Shape>
-using sizes_helper = typename shape_to_sizes<variadic_ints<Shape...>>::type;
+using shapes_to_sizes = typename partial_product<variadic_ints<Shape...>>::type;
 
 template <typename T, int... Shape>
-using subscriptor_helper = typename variadic_uncurrying<sizes_helper<Shape...>, subscriptor<T>>::type;
+using subscriptor_helper = typename variadic_uncurrying<shapes_to_sizes<Shape...>, subscriptor<T>>::type;
 
 template <typename T, int... Shape>
 class ndarray : public subscriptor_helper<T, Shape...> {
