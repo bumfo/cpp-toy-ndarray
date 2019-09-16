@@ -112,6 +112,34 @@ struct variadic_values {
   template <T... ts>
   struct type {
   };
+
+  template <bool>
+  static void print(std::ostream & os) {
+  }
+
+  template <bool, T t, T... ts>
+  static void print(std::ostream & os) {
+    os << ' ' << t;
+    print<true, ts...>(os);
+  }
+
+  template <bool>
+  static void print(std::ostream & os, bool) {
+  }
+
+  template <bool, T t, T... ts>
+  static void print(std::ostream & os, bool) {
+    os << t;
+    print<true, ts...>(os);
+  }
+
+  template <T... ts>
+  friend std::ostream & operator << (std::ostream & os, type<ts...> const & s) {
+    os.put('[');
+    print<true, ts...>(os, true);
+    os.put(']');
+    return os;
+  }
 };
 
 template <int... ints>
