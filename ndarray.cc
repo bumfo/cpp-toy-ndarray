@@ -107,6 +107,63 @@ public:
   }
 };
 
+template <int... ints>
+struct variadic_ints {};
+
+template <typename...>
+struct shape_to_sizes {
+};
+
+template <
+  typename Type, 
+  template <typename, int...> typename T, 
+  template <int...> typename G, 
+  int... Sizes>
+struct shape_to_sizes<G<>, G<>, T<Type, Sizes...>> {
+  using type = T<Type, Sizes...>;
+};
+
+template <
+  typename Type, 
+  template <typename, int...> typename T, 
+  template <int...> typename G, 
+  int... RShape>
+struct shape_to_sizes<G<>, G<RShape...>, T<Type>> : shape_to_sizes<G<>, G<RShape...>, T<Type, 1>> {
+};
+
+template <
+  typename Type, 
+  template <typename, int...> typename T, 
+  template <int...> typename G, 
+  int Shape0,
+  int... Shape, 
+  int... RShape>
+struct shape_to_sizes<G<Shape0, Shape...>, G<RShape...>, T<Type>> : shape_to_sizes<G<Shape...>, G<Shape0, RShape...>, T<Type>> {
+};
+
+template <
+  typename Type, 
+  template <typename, int...> typename T, 
+  template <int...> typename G, 
+  int RShape0,
+  int... RShape, 
+  int Size,
+  int... Sizes>
+struct shape_to_sizes<G<>, G<RShape0, RShape...>, T<Type, Size, Sizes...>> : shape_to_sizes<G<>, G<RShape...>, T<Type, RShape0 * Size, Size, Sizes...>> {
+};
+
+template <typename T, int... Shape>
+using subscriptor_helper = typename shape_to_sizes<variadic_ints<Shape...>, variadic_ints<>, subscriptor<T>>::type;
+
+template <typename T, int... Shape>
+class ndarray : public subscriptor_helper<T, Shape...> {
+  using super = subscriptor_helper<T, Shape...>;
+
+public:
+  ndarray(T * base) : super(base, 0) {
+  }
+};
+
 template <typename T>
 class subscriptor<T> {
 protected:
@@ -147,7 +204,7 @@ private:
 };
 
 template <typename T>
-class ndarray : public subscriptor<T> {
+class ndarray<T> : public subscriptor<T> {
   int * _shape;
 
 public:
@@ -178,6 +235,8 @@ class constexpr_test {
     return os;
   }
 };
+
+#include <typeinfo>
 
 using namespace std;
 
@@ -211,17 +270,24 @@ int main() {
   // cout << "A(0, 1, 0): " << A(0, 1, 0) <<'\n';
 
   int mem[24];
-  subscriptor<int, 24, 12, 4, 1> B(mem, 0);
+  // subscriptor<int, 24, 12, 4, 1> B(mem, 0);
 
   cout << "base = " << mem << '\n';
   cout << '\n';
 
-  cout << "&B[0][0][0]: " << &B[0][0][0] <<'\n';
-  cout << "&B[0][0][1]: " << &B[0][0][1] <<'\n';
-  cout << "&B[0][1][0]: " << &B[0][1][0] <<'\n';
-  cout << "&B[1][0][0]: " << &B[1][0][0] <<'\n';
+  // cout << "&B[0][0][0]: " << &B[0][0][0] <<'\n';
+  // cout << "&B[0][0][1]: " << &B[0][0][1] <<'\n';
+  // cout << "&B[0][1][0]: " << &B[0][1][0] <<'\n';
+  // cout << "&B[1][0][0]: " << &B[1][0][0] <<'\n';
 
-  cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][0].offset(1)>() << '\n';
-  cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][1].offset(0)>() << '\n';
-  cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[1][0].offset(0)>() << '\n';
+  // cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][0].offset(1)>() << '\n';
+  // cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][1].offset(0)>() << '\n';
+  // cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[1][0].offset(0)>() << '\n';
+
+  ndarray<int, 2, 3, 4> C(mem);
+
+  cout << "&C[0][0][0]: " << &C[0][0][0] <<'\n';
+  cout << "&C[0][0][1]: " << &C[0][0][1] <<'\n';
+  cout << "&C[0][1][0]: " << &C[0][1][0] <<'\n';
+  cout << "&C[1][0][0]: " << &C[1][0][0] <<'\n';
 }
