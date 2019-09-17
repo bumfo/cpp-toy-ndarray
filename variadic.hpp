@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+
+namespace toy {
 namespace variadic {
 
 
@@ -131,6 +133,9 @@ struct suffix_product_t<T<>, T<>, T<rs...>> {
 template <int... ts>
 using suffix_product = typename suffix_product_t<ints<ts...>>::type;
 
-}
+
+} // variadic
+} // toy
+
 
 #endif // VARIADIC_HPP
