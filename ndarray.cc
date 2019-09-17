@@ -159,10 +159,21 @@ class ndarray<T> : public subscriptor<T> {
   int * _shape;
 
 public:
+  template <template <int...> typename ShapeGroup, int... Shape>
+  ndarray(ShapeGroup<Shape...>, T * mem) :
+      subscriptor<T>(sizeof...(Shape), suffix_prod(Shape...), mem),
+      _shape(new int[sizeof...(Shape)] {Shape...}) {
+  }
+
+  template <typename... Args>
+  ndarray(T * mem, Args... args) : 
+      subscriptor<T>(sizeof...(args), suffix_prod(args...), mem),
+      _shape(new int[sizeof...(args)] {args...}) {
+  }
+
   template <typename... Args>
   ndarray(Args... args) : 
-      subscriptor<T>(sizeof...(args), suffix_prod(args...), new T[prod(args...)]),
-      _shape(new int[sizeof...(args)] {args...}) {
+      ndarray(new T[prod(args...)], args...) {
     std::cout << "ndarray tot_size " << prod(args...) << ", base " << this->_mem << '\n';
   }
 
@@ -235,16 +246,30 @@ int main() {
   // cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[0][1].offset(0)>() << '\n';
   // cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[1][0].offset(0)>() << '\n';
 
-  ndarray<int, 2, 3, 4> C(mem);
+  // ndarray<int, 2, 3, 4> C(mem);
 
-  cout << "dim = " << C.dim() << '\n';
-  cout << "shape = " << C.shape() << '\n';
-  cout << "sizes = " << C.sizes() << '\n';
+  // cout << "dim = " << C.dim() << '\n';
+  // cout << "shape = " << C.shape() << '\n';
+  // cout << "sizes = " << C.sizes() << '\n';
+
+  // cout << '\n';
+
+  // cout << "&C[0][0][0]: " << &C[0][0][0] <<'\n';
+  // cout << "&C[0][0][1]: " << &C[0][0][1] <<'\n';
+  // cout << "&C[0][1][0]: " << &C[0][1][0] <<'\n';
+  // cout << "&C[1][0][0]: " << &C[1][0][0] <<'\n';
+
+  // ndarray<int> D(variadic_ints<2, 3, 4>(), mem);
+  ndarray<int> D(2, 3, 4);
+
+  cout << "dim = " << D.dim() << '\n';
+  cout << "shape = " << D.shape() << '\n';
+  cout << "sizes = " << D.sizes() << '\n';
 
   cout << '\n';
 
-  cout << "&C[0][0][0]: " << &C[0][0][0] <<'\n';
-  cout << "&C[0][0][1]: " << &C[0][0][1] <<'\n';
-  cout << "&C[0][1][0]: " << &C[0][1][0] <<'\n';
-  cout << "&C[1][0][0]: " << &C[1][0][0] <<'\n';
+  cout << "&D[0][0][0]: " << &(int &)D[0][0][0] <<'\n';
+  cout << "&D[0][0][1]: " << &(int &)D[0][0][1] <<'\n';
+  cout << "&D[0][1][0]: " << &(int &)D[0][1][0] <<'\n';
+  cout << "&D[1][0][0]: " << &(int &)D[1][0][0] <<'\n';
 }
