@@ -58,7 +58,7 @@ public:
   }
 
   constexpr auto sizes() const {
-    return variadic_ints<Size, ElSize, Sizes...>();
+    return variadic::ints<Size, ElSize, Sizes...>();
   }
 };
 
@@ -80,7 +80,7 @@ public:
   }
 
   constexpr auto sizes() const {
-    return variadic_ints<Size, 1>();
+    return variadic::ints<Size, 1>();
   }
 };
 
@@ -96,7 +96,7 @@ struct subscriptor_helper_t<T, R<ints...>> {
 };
 
 template <typename T, int... Shape>
-using subscriptor_helper = typename subscriptor_helper_t<T, suffix_product<Shape...>>::type;
+using subscriptor_helper = typename subscriptor_helper_t<T, variadic::suffix_product<Shape...>>::type;
 
 template <typename T, int... Shape>
 class ndarray : public subscriptor_helper<T, Shape...> {
@@ -111,7 +111,7 @@ public:
   }
 
   constexpr auto shape() const {
-    return variadic_ints<Shape...>();
+    return variadic::ints<Shape...>();
   }
 };
 
@@ -161,20 +161,20 @@ class ndarray<T> : public subscriptor<T> {
 public:
   template <template <int...> typename ShapeGroup, int... Shape>
   ndarray(ShapeGroup<Shape...>, T * mem) :
-      subscriptor<T>(sizeof...(Shape), suffix_prod(Shape...), mem),
+      subscriptor<T>(sizeof...(Shape), variadic::suffix_prod(Shape...), mem),
       _shape(new int[sizeof...(Shape)] {Shape...}) {
   }
 
   template <typename... Args>
   ndarray(T * mem, Args... args) : 
-      subscriptor<T>(sizeof...(args), suffix_prod(args...), mem),
+      subscriptor<T>(sizeof...(args), variadic::suffix_prod(args...), mem),
       _shape(new int[sizeof...(args)] {args...}) {
   }
 
   template <typename... Args>
   ndarray(Args... args) : 
-      ndarray(new T[prod(args...)], args...) {
-    std::cout << "ndarray tot_size " << prod(args...) << ", base " << this->_mem << '\n';
+      ndarray(new T[variadic::prod(args...)], args...) {
+    std::cout << "ndarray tot_size " << variadic::prod(args...) << ", base " << this->_mem << '\n';
   }
 
   int dim() const {
@@ -259,7 +259,7 @@ int main() {
   // cout << "&C[0][1][0]: " << &C[0][1][0] <<'\n';
   // cout << "&C[1][0][0]: " << &C[1][0][0] <<'\n';
 
-  // ndarray<int> D(variadic_ints<2, 3, 4>(), mem);
+  // ndarray<int> D(variadic::ints<2, 3, 4>(), mem);
   ndarray<int> D(2, 3, 4);
 
   cout << "dim = " << D.dim() << '\n';
