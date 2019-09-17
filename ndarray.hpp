@@ -157,6 +157,7 @@ public:
 
   subscriptor & operator= (int x) {
     (T &) *this = x;
+    return *this;
   }
 
   template <typename ...Args>
