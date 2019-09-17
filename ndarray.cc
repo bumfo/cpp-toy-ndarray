@@ -57,7 +57,7 @@ public:
     return subscriptor<T, ElSize, Sizes...>(_base, _offset + i * ElSize);
   }
 
-  auto sizes() const {
+  constexpr auto sizes() const {
     return variadic_ints<Size, ElSize, Sizes...>();
   }
 };
@@ -79,7 +79,7 @@ public:
     return _offset + i;
   }
 
-  auto sizes() const {
+  constexpr auto sizes() const {
     return variadic_ints<Size, 1>();
   }
 };
@@ -106,11 +106,11 @@ public:
   ndarray(T * base) : super(base, 0) {
   }
 
-  int dim() const {
+  constexpr int dim() const {
     return sizeof...(Shape);
   }
 
-  auto shape() const {
+  constexpr auto shape() const {
     return variadic_ints<Shape...>();
   }
 };
