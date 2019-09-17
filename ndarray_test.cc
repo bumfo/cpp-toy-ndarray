@@ -8,7 +8,7 @@ int main() {
 
   cout << "dim = " << A.dim() << '\n';
   cout << "shape = " << A.shape() << '\n';
-  cout << "sizes = " << A.sizes() << '\n';
+  cout << "strides = " << A.strides() << '\n';
 
   cout << '\n';
   
@@ -44,7 +44,7 @@ int main() {
 
   cout << "dim = " << C.dim() << '\n';
   cout << "shape = " << C.shape() << '\n';
-  cout << "sizes = " << C.sizes() << '\n';
+  cout << "strides = " << C.strides() << '\n';
 
   cout << '\n';
 

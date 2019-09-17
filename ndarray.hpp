@@ -46,11 +46,11 @@ public:
   }
 };
 
-template <typename T, int... Sizes>
+template <typename T, int... Strides>
 class subscriptor;
 
-template <typename T, int Size, int ElSize, int... Sizes>
-class subscriptor<T, Size, ElSize, Sizes...> {
+template <typename T, int SuperStride, int Stride, int... Strides>
+class subscriptor<T, SuperStride, Stride, Strides...> {
   T * _base;
   int _offset;
 
@@ -59,16 +59,16 @@ public:
   }
 
   constexpr auto operator[] (int i) {
-    return subscriptor<T, ElSize, Sizes...>(_base, _offset + i * ElSize);
+    return subscriptor<T, Stride, Strides...>(_base, _offset + i * Stride);
   }
 
-  constexpr auto sizes() const {
-    return variadic::ints<Size, ElSize, Sizes...>();
+  constexpr auto strides() const {
+    return variadic::ints<SuperStride, Stride, Strides...>();
   }
 };
 
-template <typename T, int Size>
-class subscriptor<T, Size, 1> {
+template <typename T, int SuperStride>
+class subscriptor<T, SuperStride, 1> {
   T * _base;
   int _offset;
 
@@ -84,8 +84,8 @@ public:
     return _offset + i;
   }
 
-  constexpr auto sizes() const {
-    return variadic::ints<Size, 1>();
+  constexpr auto strides() const {
+    return variadic::ints<SuperStride, 1>();
   }
 };
 
@@ -124,15 +124,15 @@ template <typename T>
 class subscriptor<T> {
 protected:
   int _dim;
-  int * _sizes;
+  int * _strides;
   T * _mem;
 
 public:
-  subscriptor(int dim, int * sizes, T * mem) : _dim(dim), _sizes(sizes), _mem(mem) {
+  subscriptor(int dim, int * strides, T * mem) : _dim(dim), _strides(strides), _mem(mem) {
   }
 
   subscriptor operator[] (int i) {
-    return subscriptor(_dim - 1, _sizes + 1, _mem + i * _sizes[1]);
+    return subscriptor(_dim - 1, _strides + 1, _mem + i * _strides[1]);
   }
 
   operator T & () {
@@ -145,17 +145,17 @@ public:
 
   template <typename ...Args>
   T & operator() (Args... args) {
-    return subscript(_sizes, _mem, args...);
+    return subscript(_strides, _mem, args...);
   }
 
 private:
-  static T & subscript(int * sizes, T * mem) {
+  static T & subscript(int * strides, T * mem) {
     return *mem;
   }
 
   template <typename ...Args>
-  static T & subscript(int * sizes, T * mem, int i, Args... args) {
-    return subscript(sizes + 1, mem + i * sizes[1], args...);
+  static T & subscript(int * strides, T * mem, int i, Args... args) {
+    return subscript(strides + 1, mem + i * strides[1], args...);
   }
 };
 
@@ -190,8 +190,8 @@ public:
     return slice<int>(_shape, this->_dim);
   }
 
-  slice<int> const sizes() const {
-    return slice<int>(this->_sizes, this->_dim + 1);
+  slice<int> const strides() const {
+    return slice<int>(this->_strides, this->_dim + 1);
   }
 };
 
