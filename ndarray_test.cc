@@ -58,4 +58,15 @@ int main() {
 
   cout << "D.strides = " << D.strides() << '\n';
   cout << "E.strides = " << E.strides() << '\n';
+
+  toy::ndarray<int> X(2, 2);
+  X[0][0] = 1;
+  X[0][1] = 0;
+  X[1][0] = 0;
+  X[1][1] = 1;
+
+  X += X;
+
+  cout << X[0][0] << ' ' << X[0][1] << '\n';
+  cout << X[1][0] << ' ' << X[1][1] << '\n';
 }

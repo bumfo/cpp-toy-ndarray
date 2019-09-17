@@ -44,6 +44,15 @@ public:
     }
     return os;
   }
+
+  friend bool operator == (slice a, slice b) {
+    if (a._size != b._size) return false;
+    if (a._mem == b._mem) return true;
+    for (int i = 0, n = a._size; i < n; ++i) {
+      if (a._mem[i] != b._mem[i]) return false;
+    }
+    return true;
+  }
 };
 
 template <typename T, int... Strides>
@@ -204,6 +213,17 @@ public:
   template <int... NewShape>
   auto as_reshape() {
     return ndarray<T, NewShape...>(this->_mem);
+  }
+
+  friend ndarray<int> & operator+= (ndarray<int> & a, ndarray<int> const & b) {
+    if (a.shape() == b.shape()) {
+      for (int i = 0, n = a._strides[0]; i < n; ++i) {
+        a._mem[i] += b._mem[i];
+      }
+    } else {
+      throw std::runtime_error("operator+= shape mismatch");
+    }
+    return a;
   }
 };
 
