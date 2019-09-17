@@ -56,6 +56,10 @@ public:
   constexpr auto operator[] (int i) {
     return subscriptor<T, ElSize, Sizes...>(_base, _offset + i * ElSize);
   }
+
+  auto sizes() const {
+    return variadic_ints<Size, ElSize, Sizes...>();
+  }
 };
 
 template <typename T, int Size>
@@ -73,6 +77,10 @@ public:
 
   constexpr int offset(int i) const {
     return _offset + i;
+  }
+
+  auto sizes() const {
+    return variadic_ints<Size, 1>();
   }
 };
 
@@ -96,6 +104,14 @@ class ndarray : public subscriptor_helper<T, Shape...> {
 
 public:
   ndarray(T * base) : super(base, 0) {
+  }
+
+  int dim() const {
+    return sizeof...(Shape);
+  }
+
+  auto shape() const {
+    return variadic_ints<Shape...>();
   }
 };
 
@@ -220,6 +236,12 @@ int main() {
   // cout << constexpr_test<int, subscriptor<int, 24, 12, 4, 1>(mem, 0)[1][0].offset(0)>() << '\n';
 
   ndarray<int, 2, 3, 4> C(mem);
+
+  cout << "dim = " << C.dim() << '\n';
+  cout << "shape = " << C.shape() << '\n';
+  cout << "sizes = " << C.sizes() << '\n';
+
+  cout << '\n';
 
   cout << "&C[0][0][0]: " << &C[0][0][0] <<'\n';
   cout << "&C[0][0][1]: " << &C[0][0][1] <<'\n';
