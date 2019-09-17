@@ -52,4 +52,10 @@ int main() {
   cout << "&C[0][0][1]: " << &C[0][0][1] <<'\n';
   cout << "&C[0][1][0]: " << &C[0][1][0] <<'\n';
   cout << "&C[1][0][0]: " << &C[1][0][0] <<'\n';
+
+  auto && D = A.as_reshape<3>();
+  auto && E = C.as_reshape<3>();
+
+  cout << "D.strides = " << D.strides() << '\n';
+  cout << "E.strides = " << E.strides() << '\n';
 }

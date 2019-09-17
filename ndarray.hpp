@@ -51,6 +51,7 @@ class subscriptor;
 
 template <typename T, int SuperStride, int Stride, int... Strides>
 class subscriptor<T, SuperStride, Stride, Strides...> {
+protected:
   T * _base;
   int _offset;
 
@@ -69,6 +70,7 @@ public:
 
 template <typename T, int SuperStride>
 class subscriptor<T, SuperStride, 1> {
+protected:
   T * _base;
   int _offset;
 
@@ -117,6 +119,11 @@ public:
 
   constexpr auto shape() const {
     return variadic::ints<Shape...>();
+  }
+
+  template <int... NewShape>
+  auto as_reshape() {
+    return ndarray<T, NewShape...>(this->_base);
   }
 };
 
@@ -192,6 +199,11 @@ public:
 
   slice<int> const strides() const {
     return slice<int>(this->_strides, this->_dim + 1);
+  }
+
+  template <int... NewShape>
+  auto as_reshape() {
+    return ndarray<T, NewShape...>(this->_mem);
   }
 };
 
